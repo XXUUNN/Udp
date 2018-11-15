@@ -1,14 +1,19 @@
 package com.xun.myapplication;
 
+import android.Manifest;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.File;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -21,12 +26,15 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<UdpClient> list = new ArrayList<>();
     private String ip;
+    private CustomAudioRecord record;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
 
         //获取wifi服务
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -106,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        record = new CustomAudioRecord();
     }
 
     private String intToIp(int i) {
@@ -127,5 +136,18 @@ public class MainActivity extends AppCompatActivity {
         if (count>10){
             count = 0;
         }
+    }
+
+    public void onRecordClick(View v){
+        File file = new File(Environment.getExternalStorageDirectory(), "aaaaa.pcm");
+        record.startRecording(file);
+    }
+
+    public void onSoundClick(View v){
+        record.level = 5;
+    }
+
+    public void onCloseClick(View v){
+        record.stopRecording();
     }
 }
