@@ -80,7 +80,6 @@ public class CustomAudioRecord {
                         if (read < 0) {
                             continue;
                         }
-                        control(bufferInByte,read,level);
                         Log.e("ffffffffff", "1111run: ffff"+read );
                         outputStream.write(bufferInByte, 0, read);
                         Log.e("ffffffffff", "222run: ffff"+read );

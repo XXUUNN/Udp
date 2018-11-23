@@ -1,13 +1,9 @@
 package com.xun.myapplication;
 
 import android.Manifest;
-import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -16,9 +12,13 @@ import android.widget.Toast;
 import java.io.File;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,20 +34,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        String hostIP = getHostIP();
+
         ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
 
-        //获取wifi服务
-        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        //判断wifi是否开启
-        if (!wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
-        }
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ipAddress = wifiInfo.getIpAddress();
-         ip = intToIp(ipAddress);
+//        //获取wifi服务
+//        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+//        //判断wifi是否开启
+//        if (!wifiManager.isWifiEnabled()) {
+//            wifiManager.setWifiEnabled(true);
+//        }
+//        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+//        int ipAddress = wifiInfo.getIpAddress();
+//         ip = intToIp(ipAddress);
 
         try {
-            UdpClient udpClient = new UdpClient( ip,5555);
+            UdpClient udpClient = new UdpClient( ip,5545);
             UdpClient udpClient1 = new UdpClient( ip,5556);
             UdpClient udpClient2 = new UdpClient( ip,5557);
             UdpClient udpClient3 = new UdpClient( ip,5558);
@@ -115,6 +117,35 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         record = new CustomAudioRecord();
+    }
+
+    public static String getHostIP() {
+
+        String hostIp = null;
+        try {
+            Enumeration nis = NetworkInterface.getNetworkInterfaces();
+            InetAddress ia = null;
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = (NetworkInterface) nis.nextElement();
+                Enumeration<InetAddress> ias = ni.getInetAddresses();
+                while (ias.hasMoreElements()) {
+                    ia = ias.nextElement();
+                    if (ia instanceof Inet6Address) {
+                        continue;// skip ipv6
+                    }
+                    String ip = ia.getHostAddress();
+                    if (!"127.0.0.1".equals(ip)) {
+                        hostIp = ia.getHostAddress();
+                        break;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            Log.i("yao", "SocketException");
+            e.printStackTrace();
+        }
+        return hostIp;
+
     }
 
     private String intToIp(int i) {

@@ -1,5 +1,7 @@
 package com.xun.myapplication;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -35,6 +37,7 @@ public class UdpServer extends Thread {
      * 默认的最大的客户端的活跃时间 超过此时间 判定断开 清楚客户端信息缓存信息
      */
     public static final int DEFAULT_MAX_CLIENT_ACTIVE_TIME = 10 * 60 * 1000;
+    private static final String ATAG = "ffffffffffffffffff";
 
     private InetAddress address;
     DatagramSocket socket;
@@ -57,14 +60,14 @@ public class UdpServer extends Thread {
 
     public UdpServer(String ip) throws UnknownHostException {
         super();
-        buffer = new byte[256];
+        buffer = new byte[10];
         cacheDataArr = new ConcurrentHashMap<>(10);
         address = InetAddress.getByName(ip);
     }
 
-    public UdpServer(String ip,int serverPort) throws UnknownHostException  {
+    public UdpServer(String ip, int serverPort) throws UnknownHostException {
         super();
-        buffer = new byte[256];
+        buffer = new byte[10];
         cacheDataArr = new ConcurrentHashMap<>(10);
         this.serverPort = serverPort;
         address = InetAddress.getByName(ip);
@@ -77,8 +80,8 @@ public class UdpServer extends Thread {
         }
         isRunning = true;
         isNeedStop = false;
-        socket = new DatagramSocket(serverPort,address);
-        dataReceived = new DatagramPacket(buffer,256);
+        socket = new DatagramSocket(serverPort, address);
+        dataReceived = new DatagramPacket(buffer, buffer.length);
 
         start();
 
@@ -90,8 +93,8 @@ public class UdpServer extends Thread {
      */
     private void startScanTimer() {
         scanTimer = new Timer();
-        scanTimer.scheduleAtFixedRate(new ClientActiveScan(cacheDataArr,activeTimeMax),
-                activeTimeMax,activeTimeMax);
+        scanTimer.scheduleAtFixedRate(new ClientActiveScan(cacheDataArr, activeTimeMax),
+                activeTimeMax, activeTimeMax);
     }
 
     public void stopServer() {
@@ -118,7 +121,7 @@ public class UdpServer extends Thread {
                 socket.receive(dataReceived);
 
                 //判断哪个客户端的数据包
-                String clientTag = dataReceived.getAddress().getHostName() +":"+ dataReceived.getPort();
+                String clientTag = dataReceived.getAddress().getHostName() + ":" + dataReceived.getPort();
                 ClientCacheInfo clientCacheInfo = cacheDataArr.get(clientTag);
 
                 StringBuilder sb;
@@ -149,6 +152,7 @@ public class UdpServer extends Thread {
                 byte[] data = dataReceived.getData();
                 sb.append(new String(data, 0, dataReceived.getLength()));
                 int startIndex = sb.indexOf(DATA_START_TAG);
+                Log.e(ATAG, "run: " + new String(data, 0, dataReceived.getLength()));
                 if (startIndex >= 0) {
                     int startIndexNext = sb.indexOf(DATA_START_TAG, startIndex + DATA_START_TAG_LENGTH);
                     if (startIndexNext >= 0) {
@@ -250,25 +254,28 @@ public class UdpServer extends Thread {
 
         /**
          * udp服务端停止接收消息
+         *
          * @param stopReason udp停止的原因 正常停止值为null
          */
         void onServerStop(String stopReason);
 
         /**
          * udp服务端接收到了完整的一个消息
+         *
          * @param datagramPacket 包信息
-         * @param socket 套接字
-         * @param message payload
+         * @param socket         套接字
+         * @param message        payload
          */
         void onMessageReceived(DatagramPacket datagramPacket, DatagramSocket socket, String message);
 
         /**
          * 客户端连接数超限制 不缓存此客户端的信息
          * 可以在此方法 给客户端回送信息
-         *
+         * <p>
          * 不阻塞其他客户端的消息
+         *
          * @param dataReceived 客户端发的包
-         * @param socket 套接字
+         * @param socket       套接字
          */
         void onClientCacheRefused(DatagramPacket dataReceived, DatagramSocket socket);
     }
