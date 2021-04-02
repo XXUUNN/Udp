@@ -31,7 +31,7 @@ public class UdpClient {
             public void run() {
                 try {
                     final InetAddress address = InetAddress.getByName(serverIp);
-                    byte[] bytes = msg.getBytes();
+                    byte[] bytes = msg.getBytes("utf-8");
                     DatagramPacket packet = new DatagramPacket(bytes, bytes.length, address, serverPort);
                     socket.send(packet);
                 } catch (IOException e) {

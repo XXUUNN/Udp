@@ -121,7 +121,9 @@ public class UdpServer extends Thread {
                 socket.receive(dataReceived);
 
                 //判断哪个客户端的数据包
-                String clientTag = dataReceived.getAddress().getHostName() + ":" + dataReceived.getPort();
+                long l = System.currentTimeMillis();
+                String hostName = dataReceived.getAddress().getHostAddress();
+                String clientTag = hostName + ":" + dataReceived.getPort();
                 ClientCacheInfo clientCacheInfo = cacheDataArr.get(clientTag);
 
                 StringBuilder sb;
